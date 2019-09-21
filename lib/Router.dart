@@ -3,6 +3,12 @@ import 'screens/Login.dart';
 import 'screens/Home.dart';
 import 'screens/Match.dart';
 
+class MatchPageArguments {
+  final String roomId;
+
+  MatchPageArguments({this.roomId});
+}
+
 class WidgetWrapper extends StatelessWidget {
   final Widget child;
   final String pageTitle;
@@ -41,6 +47,15 @@ class RouteGenerator {
           builder: (_) => WidgetWrapper(
             child: Home(),
             pageTitle: 'Home',
+          ),
+        );
+        break;
+      case '/match':
+        MatchPageArguments args = settings.arguments;
+        return MaterialPageRoute(
+          builder: (_) => WidgetWrapper(
+            child: Match(roomId: args.roomId),
+            pageTitle: 'Match',
           ),
         );
         break;

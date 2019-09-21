@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
+import '../Router.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -10,6 +13,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   String barcode = "";
+  bool hasError = false;
 
   @override
   void initState() {
@@ -20,6 +24,11 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    if (!hasError && barcode.length > 0) {
+      Map<String, dynamic> data = jsonDecode(barcode);
+      Navigator.of(context).pushNamed('match',
+          arguments: MatchPageArguments(roomId: data['name']));
+    }
     return Container(
       child: Text(barcode),
     );
@@ -32,16 +41,15 @@ class _HomeState extends State<Home> {
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
         setState(() {
-          this.barcode = 'The user did not grant the camera permission!';
+          hasError = true;
         });
       } else {
-        setState(() => this.barcode = 'Unknown error: $e');
+        setState(() => hasError = true);
       }
     } on FormatException {
-      setState(() => this.barcode =
-          'null (User returned using the "back"-button before scanning anything. Result)');
+      setState(() => hasError = true);
     } catch (e) {
-      setState(() => this.barcode = 'Unknown error: $e');
+      setState(() => hasError = true);
     }
   }
 }

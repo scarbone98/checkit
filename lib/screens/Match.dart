@@ -4,16 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-class MyHomePage extends StatefulWidget {
-  final String title;
-
-  MyHomePage({Key key, @required this.title}) : super(key: key);
+class Match extends StatefulWidget {
+  final String roomId;
+  Match({Key key, this.roomId}) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MatchState createState() => _MatchState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MatchState extends State<Match> {
   TextEditingController _controller = TextEditingController();
   List<String> messages = List();
   WebSocketChannel _socketChannel;
@@ -23,15 +22,12 @@ class _MyHomePageState extends State<MyHomePage> {
     // TODO: implement initState
     super.initState();
     _socketChannel = IOWebSocketChannel.connect('ws://10.0.2.2:8080/ws',
-        headers: {"room-id": "1"});
+        headers: {"room-id": widget.roomId});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -50,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             shrinkWrap: true,
                             scrollDirection: Axis.vertical,
                             children:
-                            List<Widget>.generate(messages.length, (index) {
+                                List<Widget>.generate(messages.length, (index) {
                               return Padding(
                                   padding: EdgeInsets.symmetric(vertical: 12.0),
                                   child: Text(messages[index]));
