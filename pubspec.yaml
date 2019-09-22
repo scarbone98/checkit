@@ -29,7 +29,9 @@ dependencies:
   laravel_echo:
   web_socket_channel:
   barcode_scan:
-
+  firebase_core:
+  firebase_analytics:
+  firebase_auth:
 dev_dependencies:
   flutter_test:
     sdk: flutter

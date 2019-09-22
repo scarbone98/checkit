@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "518637760068",
+    "firebase_url": "https://checkit-cd9c3.firebaseio.com",
+    "project_id": "checkit-cd9c3",
+    "storage_bucket": "checkit-cd9c3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:518637760068:android:88fde86d7d2b44b62e9611",
+        "android_client_info": {
+          "package_name": "com.example.checkit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "518637760068-ot3q73etnjblot44q85l3pq1op80bgsg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9OA3H0rLfav53H5hW_3eIzE15AuFpkJQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "518637760068-ot3q73etnjblot44q85l3pq1op80bgsg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "518637760068-b49903d7po5hmjjp2fuag9l0uobnofhs.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.checkit"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
