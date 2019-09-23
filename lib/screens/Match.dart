@@ -3,9 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../components/ConditionalBuilder.dart';
+
+enum MatchState { CONNECTING, SEARCHING, CONNECTED }
 
 class Match extends StatefulWidget {
   final String roomId;
+
   Match({Key key, this.roomId}) : super(key: key);
 
   @override
@@ -14,15 +18,39 @@ class Match extends StatefulWidget {
 
 class _MatchState extends State<Match> {
   TextEditingController _controller = TextEditingController();
-  List<String> messages = List();
   WebSocketChannel _socketChannel;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _socketChannel = IOWebSocketChannel.connect('ws://10.0.2.2:8080/ws',
+    _socketChannel = IOWebSocketChannel.connect('ws://10.0.0.106:8080/ws',
         headers: {"room-id": widget.roomId});
+    setState(() {});
+  }
+
+  Widget connectingState() {
+    return Container();
+  }
+
+  Widget searchingState() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        SizedBox(
+          height: 200,
+          width: 200,
+          child: Container(
+            color: Colors.amber,
+          ),
+        ),
+        Text('Searching for match...')
+      ],
+    );
+  }
+
+  Widget matchedState(Map<String, dynamic> partnerData) {
+    return Container();
   }
 
   @override
@@ -42,16 +70,8 @@ class _MatchState extends State<Match> {
                       print(snapshot);
                       switch (snapshot.connectionState) {
                         case ConnectionState.active:
-                          return ListView(
-                            shrinkWrap: true,
-                            scrollDirection: Axis.vertical,
-                            children:
-                                List<Widget>.generate(messages.length, (index) {
-                              return Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12.0),
-                                  child: Text(messages[index]));
-                            }),
-                          );
+                          print(snapshot);
+                          break;
                         case ConnectionState.done:
                           break;
                         case ConnectionState.waiting:
@@ -64,7 +84,19 @@ class _MatchState extends State<Match> {
                   );
                 },
                 falsyBuilder: () {
-                  return Container();
+                  return Container(
+                    child: Center(
+                      child: Column(
+                        children: <Widget>[
+                          Text('No connection, please try again.'),
+                          IconButton(
+                            icon: Icon(Icons.refresh),
+                            onPressed: () {},
+                          )
+                        ],
+                      ),
+                    ),
+                  );
                 })
           ],
         ),
@@ -86,22 +118,4 @@ class _MatchState extends State<Match> {
     _socketChannel.sink.close();
     super.dispose();
   }
-}
-
-class ConditionalBuilder extends StatelessWidget {
-  final bool conditional;
-  final Function falsyBuilder;
-  final Function truthyBuilder;
-
-  ConditionalBuilder({
-    @required this.conditional,
-    @required this.truthyBuilder,
-    @required this.falsyBuilder,
-  })  : assert(conditional != null),
-        assert(truthyBuilder != null),
-        assert(falsyBuilder != null);
-
-  @override
-  Widget build(BuildContext context) =>
-      conditional ? truthyBuilder() : falsyBuilder();
 }
