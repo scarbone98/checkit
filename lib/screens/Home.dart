@@ -24,11 +24,6 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    if (!hasError && barcode.length > 0) {
-      Map<String, dynamic> data = jsonDecode(barcode);
-      Navigator.of(context).pushNamed('match',
-          arguments: MatchPageArguments(roomId: data['name']));
-    }
     return Container(
       child: Text(barcode),
     );
@@ -37,7 +32,6 @@ class _HomeState extends State<Home> {
   Future scan() async {
     try {
       String barcode = await BarcodeScanner.scan();
-      setState(() => this.barcode = barcode);
     } on PlatformException catch (e) {
       if (e.code == BarcodeScanner.CameraAccessDenied) {
         setState(() {

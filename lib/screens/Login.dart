@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
+import 'Home.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -6,29 +9,79 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  TextEditingController _userName = TextEditingController();
+  TextEditingController _email = TextEditingController();
   TextEditingController _password = TextEditingController();
-  FocusNode _usernameNode = FocusNode();
+  FocusNode _emailNode = FocusNode();
   FocusNode _passwordNode = FocusNode();
   bool _passwordVisible = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  PlatformException _error;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _auth.currentUser().then((user) {
+      Navigator.pushNamed(context, '/home');
+    });
+  }
+
+  void _signIn() async {
+    try {
+      final FirebaseUser user = (await _auth.createUserWithEmailAndPassword(
+        email: _email.text,
+        password: _password.text,
+      ))
+          .user;
+      Navigator.pushNamed(context, '/home');
+    } catch (e) {
+      setState(() {
+        _error = e;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
-        padding: EdgeInsets.all(32),
+        padding: EdgeInsets.fromLTRB(32, 16, 32, 16),
         decoration: BoxDecoration(color: Colors.yellow),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            if (_error != null) ...[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          'Error',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      _error.message,
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ),
+              )
+            ],
             TextFormField(
               decoration: InputDecoration(hintText: 'Email'),
               textInputAction: TextInputAction.next,
-              controller: _userName,
-              focusNode: _usernameNode,
+              controller: _email,
+              focusNode: _emailNode,
               onFieldSubmitted: (term) {
-                _usernameNode.unfocus();
+                _emailNode.unfocus();
                 FocusScope.of(context).requestFocus(_passwordNode);
               },
             ),
@@ -52,7 +105,7 @@ class _LoginState extends State<Login> {
               height: 50,
             ),
             InkWell(
-              onTap: () => Navigator.pushNamed(context, '/home'),
+              onTap: () => _signIn(),
               child: Container(
                 child: Text(
                   'Login',
