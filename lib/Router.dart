@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/Login.dart';
 import 'screens/Home.dart';
-import 'screens/Match.dart';
+import 'screens/Match/Match.dart';
 
 class MatchPageArguments {
   final String roomId;
