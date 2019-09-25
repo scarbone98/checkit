@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
@@ -19,15 +20,24 @@ class Match extends StatefulWidget {
   _MatchState createState() => _MatchState();
 }
 
+enum ChatRenderSide { RIGHT, LEFT }
+
 class _MatchState extends State<Match> {
   TextEditingController _controller = TextEditingController();
   WebSocketChannel _socketChannel;
+
+  // CHATTING STUFF
+
+  ScrollController _scrollController = ScrollController();
+  TextEditingController _textEditingController = TextEditingController();
+
+  List<Map<String, dynamic>> messages = List();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _socketChannel = IOWebSocketChannel.connect('ws://10.0.0.106:8080/ws',
+    _socketChannel = IOWebSocketChannel.connect('ws://10.0.2.2:8080/ws',
         headers: {"room-id": widget.roomId});
   }
 
@@ -35,26 +45,108 @@ class _MatchState extends State<Match> {
     return Container();
   }
 
+  Widget renderMessage(String message, ChatRenderSide side) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        child: Row(
+          mainAxisAlignment: side == ChatRenderSide.RIGHT
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width / 2),
+              padding: EdgeInsets.all(8),
+              child: Text(
+                message,
+                style: TextStyle(fontSize: 16),
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: side == ChatRenderSide.RIGHT ? Colors.blue : Colors.red,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget chattingState() {
+    Timer(
+        Duration(milliseconds: 250),
+        () => _scrollController
+            .jumpTo(_scrollController.position.maxScrollExtent));
+
+    return Container(
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            child: ListView(
+                controller: _scrollController,
+                children: List.generate(messages.length, (index) {
+                  String from = messages[index]["from"];
+                  String message = messages[index]["message"];
+                  return renderMessage(
+                      message,
+                      from == "USER"
+                          ? ChatRenderSide.RIGHT
+                          : ChatRenderSide.LEFT);
+                })),
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: TextFormField(
+                  decoration: InputDecoration(hintText: 'Send Message'),
+                  controller: _textEditingController,
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.send),
+                tooltip: 'Send',
+                onPressed: () {
+                  if (_textEditingController.text.isNotEmpty) {
+                    messages.add({
+                      "message": _textEditingController.text,
+                      "from": "USER"
+                    });
+                    _socketChannel.sink.add(
+                      jsonEncode({"Type": "SEND_MESSAGE", "Payload": {"message":_textEditingController.text}}),
+                    );
+                    _textEditingController.text = "";
+                    setState(() {});
+                  }
+                },
+              )
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
   Widget searchingState() {
     return Container(
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              SizedBox(
-                height: 200,
-                width: 200,
-                child: Container(
-                  color: Colors.red,
-                ),
-              ),
-              Text('Searching for a match...'),
-              SizedBox(
-                height: 200,
-              )
-            ],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          SizedBox(
+            height: 200,
+            width: 200,
+            child: Container(
+              color: Colors.red,
+            ),
           ),
-        ));
+          Text('Searching for a match...'),
+          SizedBox(
+            height: 200,
+          )
+        ],
+      ),
+    ));
   }
 
   Widget matchedState({Map<String, dynamic> partnerData = null}) {
@@ -69,8 +161,10 @@ class _MatchState extends State<Match> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             InkWell(
-              customBorder: Border(bottom: BorderSide(
-                  color: Colors.black, width: 10, style: BorderStyle.solid)),
+              customBorder: Border(
+                bottom: BorderSide(
+                    color: Colors.black, width: 10, style: BorderStyle.solid),
+              ),
               child: Container(
                 color: Colors.green,
                 child: Padding(
@@ -82,10 +176,8 @@ class _MatchState extends State<Match> {
                 ),
               ),
               borderRadius: BorderRadius.circular(2),
-              onTap: () {
-                _socketChannel.sink
-                    .add(jsonEncode({"Type": "ACCEPT_MATCH", "Payload": null}));
-              },
+              onTap: () => _socketChannel.sink
+                  .add(jsonEncode({"Type": "ACCEPT_MATCH", "Payload": null})),
             ),
             InkWell(
               child: Container(
@@ -93,17 +185,14 @@ class _MatchState extends State<Match> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    "Accept",
+                    "Decline",
                     style: TextStyle(fontSize: 24),
                   ),
                 ),
               ),
               borderRadius: BorderRadius.circular(2),
-              onTap: () {
-                _socketChannel.sink
-                    .add(
-                    jsonEncode({"Type": "DECLINE_MATCH", "Payload": null}));
-              },
+              onTap: () => _socketChannel.sink
+                  .add(jsonEncode({"Type": "DECLINE_MATCH", "Payload": null})),
             ),
           ],
         ),
@@ -134,9 +223,19 @@ class _MatchState extends State<Match> {
                     case ConnectionState.active:
                       Map<String, dynamic> data = jsonDecode(snapshot.data);
                       switch (data["Type"]) {
+                        case "PARTNER_DECLINED":
+                        case "DECLINED_MATCH":
                         case "NO_MATCH":
+                        case "PARTNER_DISCONNECTED":
                           return searchingState();
+                        case "MESSAGE_RECEIVED":
+                          messages.add(data["Payload"]);
+                          continue joinedMatch;
+                        joinedMatch:
+                        case "JOINED_MATCH":
+                          return chattingState();
                         case "MATCH_FOUND":
+                        case "PARTNER_ACCEPTED":
                           return matchedState();
                         case "JOINED_MATCH":
                           return joinedMatch();
