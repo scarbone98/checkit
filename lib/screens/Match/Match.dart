@@ -113,7 +113,10 @@ class _MatchState extends State<Match> {
                       "from": "USER"
                     });
                     _socketChannel.sink.add(
-                      jsonEncode({"Type": "SEND_MESSAGE", "Payload": {"message":_textEditingController.text}}),
+                      jsonEncode({
+                        "Type": "SEND_MESSAGE",
+                        "Payload": {"message": _textEditingController.text}
+                      }),
                     );
                     _textEditingController.text = "";
                     setState(() {});
@@ -229,7 +232,12 @@ class _MatchState extends State<Match> {
                         case "PARTNER_DISCONNECTED":
                           return searchingState();
                         case "MESSAGE_RECEIVED":
-                          messages.add(data["Payload"]);
+                          if (!messages.isNotEmpty) {
+                            messages.add(data["Payload"]);
+                          } else if (messages.last["time"] !=
+                              data["Payload"]["time"]) {
+                            messages.add(data["Payload"]);
+                          }
                           continue joinedMatch;
                         joinedMatch:
                         case "JOINED_MATCH":
@@ -239,6 +247,15 @@ class _MatchState extends State<Match> {
                           return matchedState();
                         case "JOINED_MATCH":
                           return joinedMatch();
+                        case "ACCEPTED_MATCH":
+                          return Container(
+                            child: Center(
+                              child: Text(
+                                "Waiting for partner to accept...",
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          );
                       }
                       break;
                     case ConnectionState.done:
