@@ -41,6 +41,12 @@ class _MatchState extends State<Match> {
         headers: {"room-id": widget.roomId});
   }
 
+  Widget serverDisconnected() {
+    return Container(
+      child: Center(child: Text('Server issues, please try again later.'),),
+    );
+  }
+
   Widget connectingState() {
     return Container();
   }
@@ -56,7 +62,7 @@ class _MatchState extends State<Match> {
           children: <Widget>[
             Container(
               constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width / 2),
+                  maxWidth: MediaQuery.of(context).size.width / 1.5),
               padding: EdgeInsets.all(8),
               child: Text(
                 message,
@@ -108,10 +114,6 @@ class _MatchState extends State<Match> {
                 tooltip: 'Send',
                 onPressed: () {
                   if (_textEditingController.text.isNotEmpty) {
-                    messages.add({
-                      "message": _textEditingController.text,
-                      "from": "USER"
-                    });
                     _socketChannel.sink.add(
                       jsonEncode({
                         "Type": "SEND_MESSAGE",
@@ -261,6 +263,7 @@ class _MatchState extends State<Match> {
                     case ConnectionState.done:
                       break;
                     case ConnectionState.waiting:
+                      return serverDisconnected();
                       break;
                     case ConnectionState.none:
                       break;
