@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/Login.dart';
+import 'screens/Login/LandingPage.dart';
 import 'screens/Home.dart';
 import 'screens/Match/Match.dart';
 
@@ -23,8 +23,9 @@ class WidgetWrapper extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: GestureDetector(
-            onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
-            child: child),
+          onTap: () => FocusScope.of(context).requestFocus(new FocusNode()),
+          child: child,
+        ),
       ),
     );
   }
@@ -37,15 +38,13 @@ class RouteGenerator {
         return MaterialPageRoute(
           builder: (_) => WidgetWrapper(
             child: Login(),
-            bottomBar: true,
             pageTitle: 'Login',
           ),
         );
       case '/home':
         return MaterialPageRoute(
-          builder: (_) => WidgetWrapper(
-            child: Home(),
-            pageTitle: 'Home',
+          builder: (_) => Scaffold(
+            body: Home(),
           ),
         );
         break;

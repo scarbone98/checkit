@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../components/ConditionalBuilder.dart';
+import '../../components/Button.dart';
 
 enum MatchState { CONNECTING, SEARCHING, CONNECTED }
 
@@ -26,6 +27,16 @@ class _MatchState extends State<Match> {
   TextEditingController _controller = TextEditingController();
   WebSocketChannel _socketChannel;
 
+  int colorIndex = 0;
+  List<Color> colors = [
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.yellow,
+    Colors.pink,
+    Colors.orange
+  ];
+
   // CHATTING STUFF
 
   ScrollController _scrollController = ScrollController();
@@ -37,13 +48,19 @@ class _MatchState extends State<Match> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    initSocket();
+  }
+
+  void initSocket() {
     _socketChannel = IOWebSocketChannel.connect('ws://10.0.2.2:8080/ws',
         headers: {"room-id": widget.roomId});
   }
 
   Widget serverDisconnected() {
     return Container(
-      child: Center(child: Text('Server issues, please try again later.'),),
+      child: Center(
+        child: Text('Server issues, please try again later.'),
+      ),
     );
   }
 
@@ -81,68 +98,76 @@ class _MatchState extends State<Match> {
 
   Widget chattingState() {
     Timer(
-        Duration(milliseconds: 250),
-        () => _scrollController
-            .jumpTo(_scrollController.position.maxScrollExtent));
+      Duration(milliseconds: 250),
+      () =>
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent),
+    );
 
-    return Container(
-      child: Column(
-        children: <Widget>[
-          Expanded(
-            child: ListView(
-                controller: _scrollController,
-                children: List.generate(messages.length, (index) {
-                  String from = messages[index]["from"];
-                  String message = messages[index]["message"];
-                  return renderMessage(
-                      message,
-                      from == "USER"
-                          ? ChatRenderSide.RIGHT
-                          : ChatRenderSide.LEFT);
-                })),
-          ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: TextFormField(
-                  decoration: InputDecoration(hintText: 'Send Message'),
-                  controller: _textEditingController,
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Container(
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ListView(
+                  controller: _scrollController,
+                  children: List.generate(messages.length, (index) {
+                    String from = messages[index]["from"];
+                    String message = messages[index]["message"];
+                    return renderMessage(
+                        message,
+                        from == "USER"
+                            ? ChatRenderSide.RIGHT
+                            : ChatRenderSide.LEFT);
+                  })),
+            ),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextFormField(
+                    decoration: InputDecoration(hintText: 'Send Message'),
+                    controller: _textEditingController,
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: Icon(Icons.send),
-                tooltip: 'Send',
-                onPressed: () {
-                  if (_textEditingController.text.isNotEmpty) {
-                    _socketChannel.sink.add(
-                      jsonEncode({
-                        "Type": "SEND_MESSAGE",
-                        "Payload": {"message": _textEditingController.text}
-                      }),
-                    );
-                    _textEditingController.text = "";
-                    setState(() {});
-                  }
-                },
-              )
-            ],
-          )
-        ],
+                IconButton(
+                  icon: Icon(Icons.send),
+                  tooltip: 'Send',
+                  onPressed: () {
+                    if (_textEditingController.text.isNotEmpty) {
+                      _socketChannel.sink.add(
+                        jsonEncode({
+                          "Type": "SEND_MESSAGE",
+                          "Payload": {"message": _textEditingController.text}
+                        }),
+                      );
+                      _textEditingController.text = "";
+                      setState(() {});
+                    }
+                  },
+                )
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
 
   Widget searchingState() {
+    Timer(
+      Duration(milliseconds: 1000),
+      () => setState(() => colorIndex = (colorIndex + 1) % colors.length),
+    );
     return Container(
         child: Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          SizedBox(
-            height: 200,
-            width: 200,
-            child: Container(
-              color: Colors.red,
+          Container(
+            constraints: BoxConstraints(maxHeight: 200, maxWidth: 200),
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 500),
+              color: colors[colorIndex],
             ),
           ),
           Text('Searching for a match...'),
@@ -154,57 +179,6 @@ class _MatchState extends State<Match> {
     ));
   }
 
-  Widget matchedState({Map<String, dynamic> partnerData = null}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        MatchedStateWidget(),
-        SizedBox(
-          height: 50,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            InkWell(
-              customBorder: Border(
-                bottom: BorderSide(
-                    color: Colors.black, width: 10, style: BorderStyle.solid),
-              ),
-              child: Container(
-                color: Colors.green,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Accept",
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ),
-              ),
-              borderRadius: BorderRadius.circular(2),
-              onTap: () => _socketChannel.sink
-                  .add(jsonEncode({"Type": "ACCEPT_MATCH", "Payload": null})),
-            ),
-            InkWell(
-              child: Container(
-                color: Colors.red,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    "Decline",
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ),
-              ),
-              borderRadius: BorderRadius.circular(2),
-              onTap: () => _socketChannel.sink
-                  .add(jsonEncode({"Type": "DECLINE_MATCH", "Payload": null})),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget joinedMatch() {
     return Container(
       child: Center(child: Text('YO! YOU JOINED A MATCH')),
@@ -214,81 +188,82 @@ class _MatchState extends State<Match> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: ConditionalBuilder(
-          conditional: _socketChannel != null,
-          truthyBuilder: () {
-            return Container(
-              child: StreamBuilder(
-                stream: _socketChannel.stream,
-                builder: (context, snapshot) {
-                  print(snapshot);
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.active:
-                      Map<String, dynamic> data = jsonDecode(snapshot.data);
-                      switch (data["Type"]) {
-                        case "PARTNER_DECLINED":
-                        case "DECLINED_MATCH":
-                        case "NO_MATCH":
-                        case "PARTNER_DISCONNECTED":
+      body: ConditionalBuilder(
+        conditional: _socketChannel != null,
+        truthyBuilder: () {
+          return Container(
+            child: StreamBuilder(
+              stream: _socketChannel.stream,
+              builder: (context, snapshot) {
+                print(snapshot);
+                switch (snapshot.connectionState) {
+                  case ConnectionState.active:
+                    Map<String, dynamic> data = jsonDecode(snapshot.data);
+                    switch (data["Type"]) {
+                      case "PARTNER_DECLINED":
+                      case "DECLINED_MATCH":
+                      case "NO_MATCH":
+                      case "PARTNER_DISCONNECTED":
                           return searchingState();
-                        case "MESSAGE_RECEIVED":
-                          if (!messages.isNotEmpty) {
-                            messages.add(data["Payload"]);
-                          } else if (messages.last["time"] !=
-                              data["Payload"]["time"]) {
-                            messages.add(data["Payload"]);
-                          }
-                          continue joinedMatch;
-                        joinedMatch:
-                        case "JOINED_MATCH":
-                          return chattingState();
-                        case "MATCH_FOUND":
-                        case "PARTNER_ACCEPTED":
-                          return matchedState();
-                        case "JOINED_MATCH":
-                          return joinedMatch();
-                        case "ACCEPTED_MATCH":
-                          return Container(
-                            child: Center(
-                              child: Text(
-                                "Waiting for partner to accept...",
-                                style: TextStyle(fontSize: 18),
-                              ),
+                      case "MESSAGE_RECEIVED":
+                        if (!messages.isNotEmpty) {
+                          messages.add(data["Payload"]);
+                        } else if (messages.last["time"] !=
+                            data["Payload"]["time"]) {
+                          messages.add(data["Payload"]);
+                        }
+                        continue joinedMatch;
+                      joinedMatch:
+                      case "JOINED_MATCH":
+                        return chattingState();
+                      case "MATCH_FOUND":
+                      case "PARTNER_ACCEPTED":
+                        return MatchedStateWidget(
+                          acceptMatch: () => this.acceptMatch(),
+                          declineMatch: () => this.declineMatch(),
+                        );
+                      case "JOINED_MATCH":
+                        return joinedMatch();
+                      case "ACCEPTED_MATCH":
+                        return Container(
+                          child: Center(
+                            child: Text(
+                              "Waiting for partner to accept...",
+                              style: TextStyle(fontSize: 18),
                             ),
-                          );
-                      }
-                      break;
-                    case ConnectionState.done:
-                      break;
-                    case ConnectionState.waiting:
-                      return serverDisconnected();
-                      break;
-                    case ConnectionState.none:
-                      break;
-                  }
-                  return Container();
-                },
+                          ),
+                        );
+                    }
+                    break;
+                  case ConnectionState.done:
+                    return serverDisconnected();
+                    break;
+                  case ConnectionState.waiting:
+                    return serverDisconnected();
+                    break;
+                  case ConnectionState.none:
+                    break;
+                }
+                return Container();
+              },
+            ),
+          );
+        },
+        falsyBuilder: () {
+          return Container(
+            child: Center(
+              child: Column(
+                children: <Widget>[
+                  Text('No connection, please try again.'),
+                  IconButton(
+                    icon: Icon(Icons.refresh),
+                    onPressed: () {},
+                  )
+                ],
               ),
-            );
-          },
-          falsyBuilder: () {
-            return Container(
-              child: Center(
-                child: Column(
-                  children: <Widget>[
-                    Text('No connection, please try again.'),
-                    IconButton(
-                      icon: Icon(Icons.refresh),
-                      onPressed: () {},
-                    )
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -300,6 +275,18 @@ class _MatchState extends State<Match> {
         "Payload": {"test": _controller.text}
       }));
     }
+  }
+
+  void acceptMatch() {
+    _socketChannel.sink.add(
+      jsonEncode({"Type": "ACCEPT_MATCH", "Payload": null}),
+    );
+  }
+
+  void declineMatch() {
+    _socketChannel.sink.add(
+      jsonEncode({"Type": "DECLINE_MATCH", "Payload": null}),
+    );
   }
 
   @override

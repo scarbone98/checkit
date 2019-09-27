@@ -1,79 +1,197 @@
+import 'dart:async';
+
+import 'package:checkit/components/Button.dart';
+import 'package:checkit/components/RadialPainter.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
-class MatchedStateWidget extends StatelessWidget {
+
+class MatchedStateWidget extends StatefulWidget {
+  final Function declineMatch;
+  final Function acceptMatch;
+  MatchedStateWidget({@required this.declineMatch, @required this.acceptMatch});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  _MatchedStateWidgetState createState() => _MatchedStateWidgetState();
+}
+
+class _MatchedStateWidgetState extends State<MatchedStateWidget>
+    with TickerProviderStateMixin {
+  double percentage = 0.0;
+  double newPercentage = 0.0;
+  AnimationController percentageAnimationController;
+  bool _isInitialized = false;
+  Timer _timer;
+
+  Widget getBlurredImage() {
+    return SizedBox(
+      height: 135,
+      width: 135,
+      child: Container(
+        child: Stack(
           children: <Widget>[
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.indigo,
-              ),
-              child: Column(
-                children: <Widget>[
-                  Text(
-                    'We found a match!',
-                    style: TextStyle(fontSize: 24, color: Colors.white),
-                  ),
-                  SizedBox(height: 10,),
-                  SizedBox(
-                    height: 300,
-                    width: 300,
-                    child: Container(
-                      child: Stack(
-                        children: <Widget>[
-                          Positioned.fill(
-                            bottom: 25,
+            Positioned.fill(
+              child: Container(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(100),
+                  child: FittedBox(
+                    fit: BoxFit.fill,
+                    child: Stack(
+                      children: <Widget>[
+                        Image.network(
+                            "https://img.memecdn.com/just-imagine-this-hot-chick-xd-have-to-be-your-girlfriend_o_2275557.jpg"),
+                        Positioned.fill(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                             child: Container(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(200),
-                                child: FittedBox(
-                                  fit: BoxFit.fill,
-                                  child: Stack(
-                                    children: <Widget>[
-                                      Image.network(
-                                          "https://img.memecdn.com/just-imagine-this-hot-chick-xd-have-to-be-your-girlfriend_o_2275557.jpg"),
-                                      Positioned.fill(
-                                        child: BackdropFilter(
-                                            filter: ImageFilter.blur(
-                                                sigmaX: 20, sigmaY: 20),
-                                            child: Container(
-                                                color: Colors.black
-                                                    .withOpacity(0))),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                              color: Colors.black.withOpacity(0),
                             ),
                           ),
-                          Align(
-                            child: Container(
-                              constraints:
-                                  BoxConstraints(maxHeight: 50, maxWidth: 100),
-                              decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(8)),
-                              child: Center(
-                                child: Text(
-                                  '4.98',
-                                  style: TextStyle(fontSize: 20),
-                                ),
-                              ),
-                            ),
-                            alignment: Alignment.bottomCenter,
-                          )
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setState(() {
+      percentage = 0.0;
+    });
+    percentageAnimationController = new AnimationController(
+        vsync: this, duration: new Duration(milliseconds: 1000))
+      ..addListener(() {
+        setState(() {
+          percentage = lerpDouble(
+              percentage, newPercentage, percentageAnimationController.value);
+        });
+      });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _timer.cancel();
+    percentageAnimationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        setState(() {
+          if (newPercentage > 100) {
+            widget.declineMatch();
+          }
+          percentage = newPercentage;
+          newPercentage += 100 / 60;
+          percentageAnimationController.forward(from: 0.0);
+        });
+      });
+      _isInitialized = true;
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.blueGrey,
+        borderRadius: BorderRadius.only(
+          bottomRight: Radius.circular(20),
+          bottomLeft: Radius.circular(20),
+        ),
+      ),
+      constraints: BoxConstraints(minWidth: double.infinity, minHeight: 450, maxHeight: 500),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(32, 16, 32, 16),
+        child: Column(
+          children: <Widget>[
+            SizedBox(
+              height: 75,
+            ),
+            CustomPaint(
+              foregroundPainter: RadialPainter(
+                lineColor: Colors.transparent,
+                completeColor: Colors.redAccent,
+                completePercent: percentage,
+                width: 8.0,
+              ),
+              child: getBlurredImage(),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Container(
+              constraints: BoxConstraints(maxHeight: 40, maxWidth: 75),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  '4.98',
+                  style: TextStyle(fontSize: 20, color: Colors.white),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 10,
+            ),
+            Text(
+              'Hot Bitch',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.2,
+              ),
+            ),
+            Text(
+              'likes sri lankan men that work for apple',
+              style: TextStyle(color: Colors.white70),
+            ),
+            SizedBox(
+              height: 50,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Column(
+                  children: <Widget>[
+                    Text(
+                      '68',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      'matches',
+                      style: TextStyle(color: Colors.white70),
+                    )
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Button(
+                  text: 'Accept',
+                  fillColor: Colors.greenAccent,
+                  onPressed: () => widget.acceptMatch()
+                ),
+                Button(
+                  text: 'Decline',
+                  fillColor: Colors.redAccent,
+                  onPressed: () => widget.declineMatch()
+                )
+              ],
             )
           ],
         ),
