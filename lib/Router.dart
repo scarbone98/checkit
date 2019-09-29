@@ -36,14 +36,15 @@ class RouteGenerator {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(
-          builder: (_) => WidgetWrapper(
-            child: Login(),
-            pageTitle: 'Login',
+          builder: (_) => Scaffold(
+            body: Login(),
+            resizeToAvoidBottomInset: false,
           ),
         );
       case '/home':
         return MaterialPageRoute(
           builder: (_) => Scaffold(
+            backgroundColor: Colors.black87,
             body: Home(),
           ),
         );
@@ -51,9 +52,8 @@ class RouteGenerator {
       case '/match':
         MatchPageArguments args = settings.arguments;
         return MaterialPageRoute(
-          builder: (_) => WidgetWrapper(
-            child: Match(roomId: args.roomId),
-            pageTitle: 'Match',
+          builder: (_) => Scaffold(
+            body: Match(roomId: args.roomId),
           ),
         );
         break;

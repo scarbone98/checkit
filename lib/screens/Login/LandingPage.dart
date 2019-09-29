@@ -39,21 +39,16 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+      padding: EdgeInsets.fromLTRB(0, 0, 0, 16),
       child: AnimatedCrossFade(
-
-        crossFadeState: _selectedTabIndex == 0 ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+        crossFadeState: _selectedTabIndex == 0
+            ? CrossFadeState.showFirst
+            : CrossFadeState.showSecond,
         duration: Duration(milliseconds: 300),
         firstChild: Container(
-          child: Column(
-            children: <Widget>[
-              LoginScreen(
-                goToSignUp: () => this.goToSignUp(),
-              ),
-            ],
-          ),
+          child: LoginScreen(goToSignUp: () => this.goToSignUp()),
         ),
-        secondChild:Container(
+        secondChild: Container(
           child: Column(
             children: <Widget>[
               SignUpScreen(
@@ -61,7 +56,7 @@ class _LoginState extends State<Login> {
               )
             ],
           ),
-        ) ,
+        ),
       ),
     );
   }

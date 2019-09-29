@@ -1,3 +1,5 @@
+import 'package:flare_flutter/flare.dart';
+import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:checkit/Router.dart';
@@ -39,85 +41,123 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      fit: StackFit.expand,
       children: <Widget>[
-        if (_error != null) ...[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Text(
-                      'Error',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  _error.message,
-                  style: TextStyle(color: Colors.red),
-                ),
-              ],
+        Positioned.fill(
+          top: 0,
+          left: -70,
+          child: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: FlareActor(
+              "assets/flow_background.flr",
+              alignment: Alignment.center,
+              fit: BoxFit.contain,
+              animation: "Flow",
             ),
-          )
-        ],
-        SizedBox(
-          height: MediaQuery.of(context).size.height / 5,
-        ),
-        TextFormField(
-          decoration: InputDecoration(hintText: 'Email'),
-          textInputAction: TextInputAction.next,
-          controller: _email,
-          focusNode: _emailNode,
-          onFieldSubmitted: (term) {
-            _emailNode.unfocus();
-            FocusScope.of(context).requestFocus(_passwordNode);
-          },
-        ),
-        SizedBox(
-          height: 25,
-        ),
-        TextFormField(
-          focusNode: _passwordNode,
-          decoration: InputDecoration(
-              hintText: 'Password',
-              suffixIcon: IconButton(
-                  onPressed: () =>
-                      setState(() => _passwordVisible = !_passwordVisible),
-                  icon: Icon(!_passwordVisible
-                      ? Icons.visibility
-                      : Icons.visibility_off))),
-          controller: _password,
-          obscureText: !_passwordVisible,
-        ),
-        SizedBox(
-          height: 50,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Button(
-              onPressed: () => _signIn(),
-              text: 'Login',
-              fillColor: Colors.greenAccent,
-            ),
-          ],
-        ),
-        SizedBox(
-          height: 5,
+          ),
         ),
         Container(
-          child: GestureDetector(
-            child: Text(
-              'Don\'t have an account? Sign up.',
-              style: TextStyle(color: Colors.lightBlueAccent),
-            ),
-            onTap: () => widget.goToSignUp(),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(
+                    height: 150,
+                  ),
+                  Row(
+                    children: <Widget>[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Welcome',
+                            style: TextStyle(fontSize: 30, color: Colors.white),
+                          ),
+                          Text(
+                            'Back',
+                            style: TextStyle(fontSize: 30, color: Colors.white),
+                          ),
+                        ],
+                      )
+                    ],
+                  )
+                ],
+              ),
+              Column(
+                children: <Widget>[
+                  TextFormField(
+                    decoration: InputDecoration(hintText: 'Email'),
+                  ),
+                  SizedBox(
+                    height: 25,
+                  ),
+                  TextFormField(
+                    decoration: InputDecoration(hintText: 'Password'),
+                  ),
+                  SizedBox(
+                    height: 30,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        'Sign In',
+                        style:
+                            TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black.withOpacity(0.8),
+                        ),
+                        width: 75,
+                        height: 75,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.keyboard_arrow_right,
+                            size: 35,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => this._signIn(),
+                        ),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 75,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        'Sign up',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Forgot Password',
+                        style: TextStyle(
+                          decoration: TextDecoration.underline,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 25,
+                  )
+                ],
+              )
+            ],
           ),
         ),
       ],

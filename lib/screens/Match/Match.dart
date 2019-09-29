@@ -4,11 +4,12 @@ import 'dart:ui';
 
 import 'package:checkit/screens/Match/MatchedState.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' as prefix0;
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../components/ConditionalBuilder.dart';
-import '../../components/Button.dart';
+import 'package:flare_flutter/flare_actor.dart';
 
 enum MatchState { CONNECTING, SEARCHING, CONNECTED }
 
@@ -59,7 +60,10 @@ class _MatchState extends State<Match> {
   Widget serverDisconnected() {
     return Container(
       child: Center(
-        child: Text('Server issues, please try again later.'),
+        child: Text(
+          'Server issues, please try again later.',
+          style: prefix0.TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -83,7 +87,7 @@ class _MatchState extends State<Match> {
               padding: EdgeInsets.all(8),
               child: Text(
                 message,
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
@@ -125,12 +129,19 @@ class _MatchState extends State<Match> {
               children: <Widget>[
                 Expanded(
                   child: TextFormField(
-                    decoration: InputDecoration(hintText: 'Send Message'),
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Send Message',
+                      hintStyle: prefix0.TextStyle(color: Colors.white),
+                    ),
                     controller: _textEditingController,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send),
+                  icon: Icon(
+                    Icons.send,
+                    color: Colors.white,
+                  ),
                   tooltip: 'Send',
                   onPressed: () {
                     if (_textEditingController.text.isNotEmpty) {
@@ -154,29 +165,34 @@ class _MatchState extends State<Match> {
   }
 
   Widget searchingState() {
-    Timer(
-      Duration(milliseconds: 1000),
-      () => setState(() => colorIndex = (colorIndex + 1) % colors.length),
-    );
-    return Container(
-        child: Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Container(
-            constraints: BoxConstraints(maxHeight: 200, maxWidth: 200),
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: 500),
-              color: colors[colorIndex],
+            height: 200,
+            child: FlareActor("assets/meteor.flr",
+                alignment: Alignment.center,
+                fit: BoxFit.contain,
+                animation: "Idle"),
+          ),
+          SizedBox(
+            height: 50,
+          ),
+          Text(
+            'Searching for a match...',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              letterSpacing: 1.2,
             ),
           ),
-          Text('Searching for a match...'),
           SizedBox(
             height: 200,
           )
         ],
       ),
-    ));
+    );
   }
 
   Widget joinedMatch() {
@@ -192,6 +208,7 @@ class _MatchState extends State<Match> {
         conditional: _socketChannel != null,
         truthyBuilder: () {
           return Container(
+            color: Colors.black87,
             child: StreamBuilder(
               stream: _socketChannel.stream,
               builder: (context, snapshot) {
@@ -204,7 +221,7 @@ class _MatchState extends State<Match> {
                       case "DECLINED_MATCH":
                       case "NO_MATCH":
                       case "PARTNER_DISCONNECTED":
-                          return searchingState();
+                        return searchingState();
                       case "MESSAGE_RECEIVED":
                         if (!messages.isNotEmpty) {
                           messages.add(data["Payload"]);
@@ -227,9 +244,27 @@ class _MatchState extends State<Match> {
                       case "ACCEPTED_MATCH":
                         return Container(
                           child: Center(
-                            child: Text(
-                              "Waiting for partner to accept...",
-                              style: TextStyle(fontSize: 18),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Container(
+                                  height: 200,
+                                  child: FlareActor("assets/loading_orb.flr",
+                                      alignment: Alignment.center,
+                                      fit: BoxFit.contain,
+                                      animation: "Aura"),
+                                ),
+                                Text(
+                                  'Waiting for partner to accept...',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 200,
+                                )
+                              ],
                             ),
                           ),
                         );
