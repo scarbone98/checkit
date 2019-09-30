@@ -50,12 +50,14 @@ class RouteGenerator {
             length: 3,
             child: Scaffold(
               backgroundColor: Colors.white,
-              bottomNavigationBar: TabBar(
-                tabs: <Widget>[
-                  Tab(icon: Icon(Icons.history)),
-                  Tab(icon: Icon(Icons.camera_alt)),
-                  Tab(icon: Icon(Icons.person)),
-                ],
+              bottomNavigationBar: SafeArea(
+                child: TabBar(
+                  tabs: <Widget>[
+                    Tab(icon: Icon(Icons.history)),
+                    Tab(icon: Icon(Icons.camera_alt)),
+                    Tab(icon: Icon(Icons.person)),
+                  ],
+                ),
               ),
               body: TabBarView(
                 children: <Widget>[
