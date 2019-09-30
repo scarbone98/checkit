@@ -1,7 +1,9 @@
+import 'package:checkit/screens/Home.dart';
 import 'package:flutter/material.dart';
+
 import 'screens/Login/LandingPage.dart';
-import 'screens/Home.dart';
 import 'screens/Match/Match.dart';
+import 'screens/Profile/ProfilePage.dart';
 
 class MatchPageArguments {
   final String roomId;
@@ -43,9 +45,26 @@ class RouteGenerator {
         );
       case '/home':
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            backgroundColor: Colors.black87,
-            body: Home(),
+          builder: (_) => DefaultTabController(
+            initialIndex: 2,
+            length: 3,
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              bottomNavigationBar: TabBar(
+                tabs: <Widget>[
+                  Tab(icon: Icon(Icons.history)),
+                  Tab(icon: Icon(Icons.camera_alt)),
+                  Tab(icon: Icon(Icons.person)),
+                ],
+              ),
+              body: TabBarView(
+                children: <Widget>[
+                  Home(),
+                  Home(),
+                  ProfilePage()
+                ],
+              )
+            ),
           ),
         );
         break;

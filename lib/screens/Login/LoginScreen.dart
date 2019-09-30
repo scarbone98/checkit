@@ -1,14 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flare_flutter/flare.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:checkit/Router.dart';
-import '../../components/Button.dart';
 
 class LoginScreen extends StatefulWidget {
   final Function goToSignUp;
+  final FirebaseAuth auth;
 
-  LoginScreen({@required this.goToSignUp});
+  LoginScreen({@required this.goToSignUp, @required this.auth});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -23,20 +24,21 @@ class _LoginScreenState extends State<LoginScreen> {
   PlatformException _error;
 
   void _signIn() async {
-//    try {
-//      final FirebaseUser user = (await _auth.createUserWithEmailAndPassword(
-//        email: _email.text,
-//        password: _password.text,
-//      ))
-//          .user;
-//      Navigator.pushNamed(context, '/home');
-//    } catch (e) {
-//      setState(() {
-//        _error = e;
-//      });
-//    }
-    Navigator.pushNamed(context, "/match",
-        arguments: MatchPageArguments(roomId: "purdue-brother's"));
+    try {
+      final FirebaseUser user = (await widget.auth.signInWithEmailAndPassword(
+        email: _email.text,
+        password: _password.text,
+      ))
+          .user;
+      Navigator.pushNamedAndRemoveUntil(context, "/home", (r) => false);
+    } catch (e) {
+      print(e.toString());
+      setState(() {
+        _error = e;
+      });
+    }
+//    Navigator.pushNamed(context, "/match",
+//        arguments: MatchPageArguments(roomId: "purdue-brother's"));
   }
 
   @override
@@ -45,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
       fit: StackFit.expand,
       children: <Widget>[
         Positioned.fill(
-          top: 0,
+          top: -10,
           left: -70,
           child: SizedBox(
             width: double.infinity,
@@ -59,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         Container(
-          padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+          padding: EdgeInsets.fromLTRB(32, 0, 32, 0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
@@ -90,14 +92,50 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               Column(
                 children: <Widget>[
+                  if (_error != null) ...[
+                    Row(
+                      children: <Widget>[
+                        Flexible(
+                          child: Text(
+                            _error.message,
+                            style: TextStyle(
+                                fontSize: 18, color: Colors.redAccent),
+                          ),
+                        )
+                      ],
+                    ),
+                    SizedBox(
+                      height: 15,
+                    )
+                  ],
                   TextFormField(
                     decoration: InputDecoration(hintText: 'Email'),
+                    controller: _email,
+                    focusNode: _emailNode,
+                    onFieldSubmitted: (term) {
+                      _emailNode.unfocus();
+                      FocusScope.of(context).requestFocus(_passwordNode);
+                    },
                   ),
                   SizedBox(
                     height: 25,
                   ),
                   TextFormField(
-                    decoration: InputDecoration(hintText: 'Password'),
+                    obscureText: !_passwordVisible,
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(
+                            () => _passwordVisible = !_passwordVisible),
+                        icon: Icon(
+                          _passwordVisible
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                      ),
+                    ),
+                    controller: _password,
+                    focusNode: _passwordNode,
                   ),
                   SizedBox(
                     height: 30,
@@ -108,8 +146,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: <Widget>[
                       Text(
                         'Sign In',
-                        style:
-                            TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -136,11 +174,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      Text(
-                        'Sign up',
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                          fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap: () => widget.goToSignUp(),
+                        child: Text(
+                          'Sign up',
+                          style: TextStyle(
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       Text(

@@ -31,9 +31,9 @@ class _LoginState extends State<Login> {
     // TODO: implement initState
     super.initState();
     _selectedTabIndex = 0;
-//    _auth.currentUser().then((user) {
-//      Navigator.pushNamed(context, '/home');
-//    });
+    _auth.currentUser().then((user) {
+      Navigator.pushNamedAndRemoveUntil(context, "/home", (r) => false);
+    });
   }
 
   @override
@@ -46,15 +46,15 @@ class _LoginState extends State<Login> {
             : CrossFadeState.showSecond,
         duration: Duration(milliseconds: 300),
         firstChild: Container(
-          child: LoginScreen(goToSignUp: () => this.goToSignUp()),
+          child: LoginScreen(
+            goToSignUp: () => this.goToSignUp(),
+            auth: _auth,
+          ),
         ),
         secondChild: Container(
-          child: Column(
-            children: <Widget>[
-              SignUpScreen(
-                goBackToLogin: () => this.goBackToLogin(),
-              )
-            ],
+          child: SignUpScreen(
+            goBackToLogin: () => this.goBackToLogin(),
+            auth: _auth,
           ),
         ),
       ),
